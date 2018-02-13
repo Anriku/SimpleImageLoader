@@ -76,7 +76,6 @@ public class MainActivity extends AppCompatActivity {
         }else {
             init();
         }
-        Toast.makeText(this, MD5Helper.hashKeyForDisk(images[0]),Toast.LENGTH_LONG).show();
     }
 
     private void init() {
