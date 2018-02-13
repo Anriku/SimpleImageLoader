@@ -35,6 +35,7 @@ public class RecAdapter extends RecyclerView.Adapter<RecAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(RecAdapter.ViewHolder holder, int position) {
+        holder.imageView.setImageResource(R.drawable.ic_launcher_background);
         imageLoader.displayImage(images[position],holder.imageView);
     }
 

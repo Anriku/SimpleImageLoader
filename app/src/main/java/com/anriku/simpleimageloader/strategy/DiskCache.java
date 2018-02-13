@@ -26,10 +26,10 @@ import java.io.OutputStream;
 public class DiskCache implements ImageCache {
 
     private static final int DISK_CACHE_SIZE = 50 * 1024 * 1024;
-    private Context context;
+    private DiskLruCache diskLruCache;
 
     public DiskCache(Context context) {
-        this.context = context;
+        diskLruCache = initDiskCache(context);
     }
 
     /**
@@ -56,7 +56,6 @@ public class DiskCache implements ImageCache {
      * @param context
      */
     private DiskLruCache initDiskCache(Context context) {
-        DiskLruCache diskLruCache = null;
         File file = getFile(context, "imageCache");
         if (!file.exists()) {
             file.mkdirs();
@@ -72,27 +71,16 @@ public class DiskCache implements ImageCache {
 
     @Override
     public void putImage(String url, Bitmap bitmap) {
-        DiskLruCache diskLruCache = initDiskCache(context);
         DiskLruCache.Editor editor = null;
         String hashCode = MD5Helper.hashKeyForDisk(url);
         OutputStream os = null;
-        InputStream in;
-        BufferedInputStream bis;
-        BufferedOutputStream bos;
 
         try {
             editor = diskLruCache.edit(hashCode);
             os = editor.newOutputStream(0);
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG,100,baos);
-            in = new ByteArrayInputStream(baos.toByteArray());
-            bis = new BufferedInputStream(in, 8 * 1024);
-            bos = new BufferedOutputStream(os, 8 * 1024);
-            int length;
-            while ((length = bis.read()) != -1) {
-                bos.write(length);
-            }
+            bitmap.compress(Bitmap.CompressFormat.JPEG,100,os);
             editor.commit();
+            diskLruCache.flush();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -108,7 +96,6 @@ public class DiskCache implements ImageCache {
 
     @Override
     public Bitmap getImage(String url) {
-        DiskLruCache diskLruCache = initDiskCache(context);
         String hashCode = MD5Helper.hashKeyForDisk(url);
         Bitmap bitmap = null;
         FileInputStream is = null;
